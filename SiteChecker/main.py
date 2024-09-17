@@ -5,10 +5,28 @@ from tqdm import tqdm
 from urllib.parse import urlparse, urljoin
 import xml.etree.ElementTree as ET
 import os
+import colorama
+from colorama import Fore, Style, init
 import time
+import platform
+
+def set_terminal_size():
+    title = "▬▬ι═══════ﺤ / Stijn's Lib \\ ▄︻デ══━一"
+
+    if platform.system() == 'Darwin':
+        os.system('printf "\\e[8;55;87t"')
+        os.system(f'echo -n -e "\\033]0;{title}\\007"')
+
+    elif platform.system() == 'Windows':
+        os.system('mode con: cols=87 lines=55')
+        os.system(f'title {title}')
+
+set_terminal_size()
+
+init(autoreset=True)
 
 def clear_console():
-    os.system('clear' if os.name != 'nt' else 'cls')
+    print("\033c", end="")
 
 def has_content(soup):
     return bool(soup.find('h1') or soup.find('h2') or soup.find('h3') or soup.find('p'))
@@ -249,36 +267,94 @@ def check_urls(file_path):
     except Exception as e:
         print(f"An error occurred: {e}")
 
+import json
+
+def extract_urls_from_json(input_file):
+    try:
+        with open(input_file, 'r') as file:
+            data = json.load(file)
+
+        if "sitemap" in data and isinstance(data["sitemap"], list):
+            return data["sitemap"]
+        else:
+            print(f"'sitemap' key not found or is not a list in {input_file}")
+            return []
+
+    except FileNotFoundError:
+        print(f"The file {input_file} was not found.")
+        return []
+    except json.JSONDecodeError:
+        print(f"The file {input_file} is not a valid JSON file.")
+        return []
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return []
+
 def display_ascii_art():
-    art = """
-   ▄████████     ███      ▄█       ▄█ ███▄▄▄▄         ▄█        ▄█  ▀█████████▄  
-  ███    ███ ▀█████████▄ ███      ███ ███▀▀▀██▄      ███       ███    ███    ███ 
-  ███    █▀     ▀███▀▀██ ███▌     ███ ███   ███      ███       ███▌   ███    ███ 
-  ███            ███   ▀ ███▌     ███ ███   ███      ███       ███▌  ▄███▄▄▄██▀  
-▀███████████     ███     ███▌     ███ ███   ███      ███       ███▌ ▀▀███▀▀▀██▄  
-         ███     ███     ███      ███ ███   ███      ███       ███    ███    ██▄ 
-   ▄█    ███     ███     ███      ███ ███   ███      ███▌    ▄ ███    ███    ███ 
- ▄████████▀     ▄████▀   █▀   █▄ ▄███  ▀█   █▀       █████▄▄██ █▀   ▄█████████▀  
-                              ▀▀▀▀▀▀                 ▀                           
-                                                
-                                                - @Stijn
-    """
-    print(art)
+    print(Fore.RED + """
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣴⣗⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣹⠿⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣾⡿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣰⡟⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢰⡿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⡿⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⣿⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠐⢶⣤⡠⡀⠀⠀⠀⠀⠀⠀⠀⢠⣿⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠈⠛⠳⠦⣄⣤⣤⣼⣴⡿⡏⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠋⢿⣿⣾⣿⣿⣅⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⡟⣯⢻⣟⠏⠛⠳⢤⣄⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⡿⣿⡾⠁⠀⠀⠀⠀⠀⠙⠓⠷⣤⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣔⣱⡃⡟⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠴⢜⡢⠄⠀⠀⠀⠀⠀⢰⣛⣿⡟⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⡄⠀⠀⠀⠀⠀⢀⣿⠷⣻⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⢿⣾⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⣦⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡜⠁⢾⠇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡃⠀⠀⠀⠀⠀⠀⠀⠀⠀⣰⡿⠃⡜⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠇⠀⠀⠀⠀⠀⠀⠀⠀⢠⢯⡷⡰⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⠀⠀⠀⠀⠀⠀⠀⢀⢏⡾⡷⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡄⠀⠀⠀⠸⠀⢀⣄⠀⠀⠀⢀⣾⣿⢉⠃⠀⠀⠀⠀⠀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠺⠍⠁⠀⠀⠐⠀⠀⣋⠀⠀⠀⣼⣴⣻⠇⠀⠀⠀⠀⠀⡄⠁⠀⠀⠀⠀⡆⢀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠈⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡄⠀⠀⢃⠄⣸⣿⠿⡗⠀⢠⠀⠀⠀⠆⠀⠀⠀⠀⠀⠘⡋⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠐⡄⠀⠀⠀⠀⠀⡀⠀⠀⡀⠀⠀⠀⡀⣰⣿⢭⡝⠁⠈⠛⠁⠰⠁⠀⠀⠀⠀⠀⠀⠀⠂⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⠘⠈⣠⡅⢀⠰⠀⣦⡏⢛⠦⠃⡀⠀⠀⠜⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠐⠀⠀⠙⠀⠐⡈⡠⠌⠀⠼⠉⣵⢼⠛⠀⠁⡠⠂⡀⠶⠂⠀⠒⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⢀⠔⠣⠁⢀⠢⠂⠣⠄⣀⣉⢨⠰⠁⠀⡅⠔⠀⠄⢀⠀⠀⠀⠚⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⣆⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠈⠀⠀⠀⡀⠀⠈⡀⠈⠅⡀⠀⡆⠀⣸⢃⠃⠢⠃⠀⠈⠀⠀⠷⠔⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠄⠉⠁⢂ - @stijn ▄︻デ══━一 ?
+⠀⠀⠀⠀⠀⠀⠀⠀⡐⢤⠃⠘⡋⠐⠁⠼⢞⠈⡞⠁⠴⠖⢠⡘⠀⠈⠏⠀⠤⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠁⡕⡂⠃⠠⠠⠈
+⠀⠀⠀⠀⠀⠀⠐⠀⠏⠘⠀⠀⠀⠆⡠⣄⠜⢀⡀⣁⡀⠁⠈⠀⣀⠀⠥⠀⠒⠒⠂⠀⠀⠭⠉⠙⣻⣿⣶⠄⠠⠠⠤⠤⠀⠀⠀⠀⠀⠒⠒⠚⢒⠚⠛⠻⠽⠛⠛⠒⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⣠⠐⣶⠂⠈⢳⢄⡠⠉⢠⠀⢰⠀⠜⠅⠈⠁⠀⠀⠀⠄⠀⠀⠀⠀⠈⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠂⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⢀⢨⠀⠊⣸⠞⣠⠘⣧⢸⠘⡀⠘⠃⠤⠀⠈⢌⠨⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⣠⠀⠀⠐⢠⣎⠪⢀⣁⠒⠳⢸⠠⣗⢶⠂⢀⠀⡀⠀⡈⠀⠀⠈⠀⠄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠐⠇⠀⠀⠀⠈⠠⠀⠈⢈⣯⠖⣞⠃⠀⠀⢸⠀⢠⠘⢀⠁⢀⠂⠢⠁⠀⠀⠛⠀⠀⠀⠀⠐⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⡠⠀⠉⠀⠀⠀⠀⠊⠁⣠⢃⠁⠶⢠⢸⠀⠆⠈⠀⠣⠁⠁⠀⠀⠀⠀⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠘⠀⢀⣯⣧⡞⠁⡌⠀⠀⣦⢸⠀⢀⠀⢁⠀⢀⠀⠁⠀⠀⠑⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⣼⣿⠟⠀⠠⠀⠀⠀⠀⠀⠀⢘⠀⠀⠀⠈⢁⠀⠀⠀⠀⠈⠀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠐⢮⠗⠒⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⣼⣿⠃⠀⠀⠀⠀⠀⠁⠀⠀⠀⢘⠀⠀⠀⠀⠈⠂⠀⠀⠀⠀⠀⠈⢀⠀⠀⠀⠀⠀⠀⠀⠀⠈⡄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⢀⡿⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠨⠀⠀⠀⠀⠀⠈⠀⠀⠀⣴⡀⠀⠀⠐⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠈⠀⠀⠀⠀⠀⡀⠀⠀⠀⠀⠀⠀⠀⡀⠀⠀⠀⠀⠀⠠⠄⠀⠸⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⡏⠁⠀⠀⠀⠀⠀⠀⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+
+    """)  
+
+def custom_input(prompt):
+    return input(Fore.RED + "▬▬ι═══════ﺤ @ " + prompt + Fore.WHITE)
 
 def main_menu():
     while True:
         clear_console()
         display_ascii_art()
-        print("\nSelect an option:")
-        print("1) Scrape Sitemap")
-        print("2) Check Empty Pages")
-        print("4) Compare Two Files for Missing Tags")
-        print("X) Exit")
-
-        choice = input("Enter your choice (1/2/3): ")
+        print(Fore.RED + "\nSelect an option:")
+        print(Fore.RED + "1) Scrape Sitemap")
+        print(Fore.RED + "2) Check Empty Pages")
+        print(Fore.RED + "3) Compare Two Files for Missing Tags")
+        print(Fore.RED + "4) Extract JSON to raw text for your files")
+        print(Fore.RED + "X) Exit")
+        
+        choice = custom_input("Enter your choice: ")
 
         if choice == '1':
-            sitemap_url = input("Enter the sitemap URL (e.g., https://example.com/sitemap.xml): ")
+            sitemap_url = custom_input("Enter the sitemap URL (e.g., https://example.com/sitemap.xml): ")
             sitemap_urls = scrape_sitemap(sitemap_url)
 
             if sitemap_urls:
@@ -289,22 +365,40 @@ def main_menu():
                 print(f"Sitemap URLs have been written to {sitemap_filename}.")
             else:
                 print("No URLs found in the sitemap.")
-            input("Press Enter to return to the main menu...")
+            custom_input("Press Enter to return to the main menu...")
+        
         elif choice == '2':
-            file_path = input("Enter the path to the file containing URLs: ")
+            file_path = custom_input("Enter the path to the file containing URLs: ")
             check_urls(file_path)
-            input("Press Enter to return to the main menu...")
-        elif choice == 'x'.lower():
-            print("Exiting...")
+            custom_input("Press Enter to return to the main menu...")
+        
+        elif choice.lower() == 'x':
+            print(Fore.RED + "Exiting...")
             break
-        elif choice == '4':
-            old_file = input("Enter the path to the first file (Old version): ")
-            new_file = input("Enter the path to the second file (New version): ")
+        
+        elif choice == '3':
+            old_file = custom_input("Enter the path to the first file (Old version): ")
+            new_file = custom_input("Enter the path to the second file (New version): ")
             compare_files(old_file, new_file)
-            input("Press Enter to return to the main menu...")
+            custom_input("Press Enter to return to the main menu...")
+        
+        elif choice == '4':
+            input_file = custom_input("Enter the path to the JSON file: ")
+            urls = extract_urls_from_json(input_file)
+                
+            if urls:
+                output_file = f"extracted_urls_{extract_domain(input_file)}.txt"
+                with open(output_file, 'w') as f:
+                    for url in urls:
+                        f.write(url + "\n")
+                print(f"URLs extracted and saved to {output_file}.")
+            else:
+                print("No URLs found or an error occurred.")
+                
+            custom_input("Press Enter to return to the main menu...")
 
         else:
-            print("Invalid choice. Please select 1, 2, or 3.")
+            print(Fore.RED + "Invalid choice. Please select 1, 2, 3, 4, or X.")
             time.sleep(1)
 
 if __name__ == "__main__":
