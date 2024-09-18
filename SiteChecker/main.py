@@ -1,14 +1,17 @@
 import requests
-from bs4 import BeautifulSoup
+import time
+import sys
+import platform
 import json
-from tqdm import tqdm
-from urllib.parse import urlparse, urljoin
 import xml.etree.ElementTree as ET
 import os
 import colorama
+from tqdm import tqdm
+from urllib.parse import urlparse, urljoin
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
+from bs4 import BeautifulSoup
 from colorama import Fore, Style, init
-import time
-import platform
 
 def set_terminal_size():
     title = "▬▬ι═══════ﺤ / Stijn's Lib \\ ▄︻デ══━一"
@@ -48,11 +51,92 @@ def get_base_url(url):
     parsed_url = urlparse(url)
     return f"{parsed_url.scheme}://{parsed_url.netloc}"
 
+def try_sitemap_url(url): #243 sitemaps, more will follow =)
+    sitemap_paths = [ 
+        '/sitemap.xml', '/sitemap_index.xml', '/sitemap1.xml', '/sitemap2.xml',
+        '/sitemap_main.xml', '/sitemap-news.xml', '/sitemap-products.xml', 
+        '/sitemap-posts.xml', '/sitemap-pages.xml', '/sitemap-category.xml', 
+        '/sitemap-tags.xml', '/sitemap-articles.xml', '/sitemap-blog.xml', 
+        '/sitemap-content.xml', '/sitemap-blog-posts.xml', '/sitemap-categories.xml',
+        '/sitemap-subpages.xml', '/sitemap-media.xml', '/sitemap-videos.xml',
+        '/sitemap-images.xml', '/sitemap-events.xml', '/sitemap-reviews.xml',
+        '/sitemap-recent.xml', '/sitemap-directory.xml', '/sitemap-products-pages.xml',
+        '/sitemap-services.xml', '/sitemap-team.xml', '/sitemap-locations.xml',
+        '/sitemap-faq.xml', '/sitemap-guides.xml', '/sitemap-tutorials.xml',
+        '/sitemap-portfolio.xml', '/sitemap-case-studies.xml', '/sitemap-testimonials.xml',
+        '/sitemap-offers.xml', '/sitemap-promotions.xml', '/sitemap-specials.xml',
+        '/sitemap-announcements.xml', '/sitemap-updates.xml', '/sitemap-newsletters.xml',
+        '/sitemap-archive.xml', '/sitemap-releases.xml', '/sitemap-podcasts.xml',
+        '/sitemap-interviews.xml', '/sitemap-quizzes.xml', '/sitemap-resources.xml',
+        '/sitemap-demos.xml', '/sitemap-partners.xml', '/sitemap-jobs.xml',
+        '/sitemap-careers.xml', '/sitemap-press.xml', '/sitemap-books.xml',
+        '/sitemap-wholesale.xml', '/sitemap-distributors.xml', '/sitemap-brands.xml',
+        '/sitemap-subscriptions.xml', '/sitemap-latest.xml', '/sitemap-featured.xml',
+        '/sitemap-galleries.xml', '/sitemap-downloads.xml', '/sitemap-links.xml',
+        '/sitemap-events-list.xml', '/sitemap-news-archive.xml', '/sitemap-upcoming.xml',
+        '/sitemap-sales.xml', '/sitemap-trends.xml', '/sitemap-papers.xml',
+        '/sitemap-workshops.xml', '/sitemap-webinars.xml', '/sitemap-research.xml',
+        '/sitemap-articles-list.xml', '/sitemap-reports.xml', '/sitemap-podcasts-list.xml',
+        '/sitemap-videos-list.xml', '/sitemap-ebooks.xml', '/sitemap-patents.xml',
+        '/sitemap-standards.xml', '/sitemap-guides-list.xml', '/sitemap-tutorials-list.xml',
+        '/sitemap-seminars.xml', '/sitemap-conferences.xml', '/sitemap-courses.xml',
+        '/sitemap-summits.xml', '/sitemap-articles-summary.xml', '/sitemap-news-summary.xml',
+        '/sitemap-features.xml', '/sitemap-topics.xml', '/sitemap-discussions.xml',
+        '/sitemap-articles-featured.xml', '/sitemap-resources-list.xml', '/sitemap-tools.xml',
+        '/sitemap-software.xml', '/sitemap-hardware.xml', '/sitemap-inventory.xml',
+        '/sitemap-services-list.xml', '/sitemap-products-list.xml', '/sitemap-brands-list.xml',
+        '/sitemap-affiliates.xml', '/sitemap-discounts.xml', '/sitemap-coupons.xml',
+        '/sitemap-promotions-list.xml', '/sitemap-articles-updated.xml', '/sitemap-reviews-list.xml',
+        '/sitemap-articles-recent.xml', '/sitemap-top-reviews.xml', '/sitemap-case-studies-list.xml',
+        '/sitemap-books-list.xml', '/sitemap-wholesale-list.xml', '/sitemap-distributors-list.xml',
+        '/sitemap-subscriptions-list.xml', '/sitemap-latest-news.xml', '/sitemap-featured-posts.xml',
+        '/sitemap-guides-updated.xml', '/sitemap-tutorials-updated.xml', '/sitemap-events-upcoming.xml',
+        '/sitemap-news-releases.xml', '/sitemap-press-releases.xml', '/sitemap-articles-published.xml',
+        '/sitemap-articles-archived.xml', '/sitemap-podcast-episodes.xml', '/sitemap-video-episodes.xml',
+        '/sitemap-podcasts-recent.xml', '/sitemap-webinars-upcoming.xml', '/sitemap-courses-list.xml',
+        '/sitemap-seminars-upcoming.xml', '/sitemap-articles-archived.xml', '/sitemap-reports-updated.xml',
+        '/sitemap-research-papers.xml', '/sitemap-guides-recent.xml', '/sitemap-tutorials-recent.xml',
+        '/sitemap-updates-recent.xml', '/sitemap-upcoming-events.xml', '/sitemap-coupons-list.xml',
+        '/sitemap-affiliates-list.xml', '/sitemap-discounts-list.xml', '/sitemap-new-products.xml',
+        '/sitemap-featured-products.xml', '/sitemap-press-releases-recent.xml', '/sitemap-case-studies-updated.xml',
+        '/sitemap-book-reviews.xml', '/sitemap-featured-books.xml', '/sitemap-latest-research.xml',
+        '/sitemap-upcoming-releases.xml', '/sitemap-latest-guides.xml', '/sitemap-trending.xml',
+        '/sitemap-latest-releases.xml', '/sitemap-video-tutorials.xml', '/sitemap-ebooks-list.xml',
+        '/sitemap-news-features.xml', '/sitemap-research-updated.xml', '/sitemap-articles-recent.xml',
+        '/sitemap-recent-guides.xml', '/sitemap-recent-tutorials.xml', '/sitemap-podcast-releases.xml',
+        '/sitemap-webinars-recent.xml', '/sitemap-seminars-recent.xml', '/sitemap-upcoming-research.xml',
+        '/sitemap-recent-papers.xml', '/sitemap-latest-webinars.xml', '/sitemap-featured-courses.xml',
+        '/sitemap-archive-updated.xml', '/sitemap-podcast-recent.xml', '/sitemap-webinar-archives.xml',
+        '/sitemap-guide-archives.xml', '/sitemap-tutorial-archives.xml', '/sitemap-news-features-recent.xml',
+        '/sitemap-research-recent.xml', '/sitemap-event-archives.xml', '/sitemap-latest-updates.xml',
+        '/sitemap-coupons-recent.xml', '/sitemap-affiliates-recent.xml', '/sitemap-discounts-recent.xml',
+        '/sitemap-new-releases.xml', '/sitemap-featured-releases.xml', '/sitemap-book-categories.xml',
+        '/sitemap-research-categories.xml', '/sitemap-tutorial-categories.xml', '/sitemap-guide-categories.xml',
+        '/sitemap-webinar-categories.xml', '/sitemap-event-categories.xml', '/sitemap-podcast-categories.xml',
+        '/sitemap-video-categories.xml', '/sitemap-product-categories.xml', '/sitemap-service-categories.xml',
+        '/sitemap-team-categories.xml', '/sitemap-case-study-categories.xml', '/sitemap-featured-case-studies.xml',
+        '/sitemap-press-categories.xml', '/sitemap-papers-categories.xml', '/sitemap-book-collections.xml',
+        '/sitemap-research-collections.xml', '/sitemap-tutorial-collections.xml', '/sitemap-guide-collections.xml',
+        '/sitemap-webinar-collections.xml', '/sitemap-event-collections.xml', '/sitemap-podcast-collections.xml',
+        '/sitemap-video-collections.xml', '/sitemap-product-collections.xml', '/sitemap-service-collections.xml',
+        '/sitemap-team-collections.xml', '/sitemap-case-study-collections.xml', '/sitemap-featured-case-studies-list.xml',
+        '/sitemap-press-releases-list.xml', '/sitemap-papers-collections.xml', '/sitemap-research-summaries.xml',
+        '/sitemap-tutorial-summaries.xml', '/sitemap-guide-summaries.xml', '/sitemap-webinar-summaries.xml',
+        '/sitemap-event-summaries.xml', '/sitemap-podcast-summaries.xml', '/sitemap-video-summaries.xml',
+        '/sitemap-product-summaries.xml', '/sitemap-service-summaries.xml', '/sitemap-team-summaries.xml',
+        '/sitemap-case-study-summaries.xml', '/sitemap-featured-case-studies-summaries.xml', '/sitemap-press-releases-summaries.xml',
+        '/sitemap-papers-summaries.xml', '/sitemap-book-summaries.xml', '/sitemap-research-summaries.xml',
+        '/sitemap-tutorial-summaries.xml', '/sitemap-guide-summaries.xml', '/sitemap-webinar-summaries.xml',
+        '/sitemap-event-summaries.xml', '/sitemap-podcast-summaries.xml', '/sitemap-video-summaries.xml',
+        '/sitemap-product-summaries.xml', '/sitemap-service-summaries.xml', '/sitemap-team-summaries.xml',
+        '/sitemap-case-study-summaries.xml', '/sitemap-featured-case-studies-summaries.xml', '/sitemap-press-releases-summaries.xml',
+        '/sitemap-papers-summaries.xml', '/sitemap-book-collections-list.xml', '/sitemap-research-collections-list.xml',
+        '/sitemap-tutorial-collections-list.xml', '/sitemap-guide-collections-list.xml', '/sitemap-webinar-collections-list.xml',
+        '/sitemap-event-collections-list.xml', '/sitemap-podcast-collections-list.xml', '/sitemap-video-collections-list.xml',
+        '/sitemap-product-collections-list.xml', '/sitemap-service-collections-list.xml', '/sitemap-team-collections-list.xml',
+        '/sitemap-case-study-collections-list.xml', '/sitemap-featured-case-studies-list.xml', '/sitemap-press-releases-list.xml'
+    ]
 
-def try_sitemap_url(url):
-    sitemap_paths = ['/sitemap.xml', '/sitemap_index.xml', '/sitemap1.xml', '/sitemap2.xml', 
-                     '/sitemap_main.xml', '/sitemap-news.xml', '/sitemap-products.xml']
-    
     if check_sitemap(url):
         return url
 
@@ -290,6 +374,40 @@ def extract_urls_from_json(input_file):
         print(f"An error occurred: {e}")
         return []
 
+class FileChangeHandler(FileSystemEventHandler):
+    def process(self, event):
+        if event.is_directory:
+            return
+
+        if event.event_type == 'created':
+            print(f"{Fore.GREEN}―――ι═══════ﺤ @ file ADDED: {event.src_path}")
+        elif event.event_type == 'deleted':
+            print(f"{Fore.RED}―――ι═══════ﺤ @ file DELETED: {event.src_path}")
+        elif event.event_type == 'modified':
+            print(f"{Fore.YELLOW}―――ι═══════ﺤ @ file EDITED: {event.src_path}")
+
+    def on_modified(self, event):
+        self.process(event)
+    
+    def on_created(self, event):
+        self.process(event)
+    
+    def on_deleted(self, event):
+        self.process(event)
+
+def start_monitoring(path):
+    event_handler = FileChangeHandler()
+    observer = Observer()
+    observer.schedule(event_handler, path, recursive=True)
+    observer.start()
+    
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        observer.stop()
+    observer.join()
+
 def display_ascii_art():
     print(Fore.RED + """
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣴⣗⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
@@ -340,6 +458,135 @@ def display_ascii_art():
 def custom_input(prompt):
     return input(Fore.RED + "▬▬ι═══════ﺤ @ " + prompt + Fore.WHITE)
 
+def get_links_from_page(url):
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        
+        soup = BeautifulSoup(response.text, 'html.parser')
+        links = [a.get('href') for a in soup.find_all('a', href=True)]
+        
+        links_data = {url: {"total links": len(links)}}
+        for idx, link in enumerate(links, 1):
+            links_data[url][idx] = link
+
+        return links_data
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching {url}: {e}")
+        return {}
+
+def load_existing_data(filename):
+    if os.path.exists(filename):
+        with open(filename, 'r') as file:
+            try:
+                return json.load(file)
+            except json.JSONDecodeError:
+                print("Error decoding JSON file. Starting with empty data.")
+                return {}
+    return {}
+
+import json
+import os
+
+def load_existing_data(filename):
+    if os.path.exists(filename):
+        with open(filename, 'r') as file:
+            return json.load(file)
+    else:
+        return {}
+
+def load_existing_data(filename):
+    if os.path.exists(filename):
+        with open(filename, 'r') as file:
+            return json.load(file)
+    else:
+        return {}
+
+def save_links_to_json(new_links_data, filename='links.json'):
+    existing_data = load_existing_data(filename)
+    
+    if isinstance(new_links_data, dict):
+        for url, links in new_links_data.items():
+            if url not in existing_data:
+                existing_data[url] = {"total links": len(links)}
+            
+            for index, link in enumerate(links, start=1):
+                existing_data[url][str(index)] = link
+
+    elif isinstance(new_links_data, list):
+        if 'url' in existing_data:
+            existing_data['url']["total links"] = len(new_links_data)
+            for index, link in enumerate(new_links_data, start=1):
+                existing_data['url'][str(index)] = link
+        else:
+            existing_data['url'] = {"total links": len(new_links_data)}
+            for index, link in enumerate(new_links_data, start=1):
+                existing_data['url'][str(index)] = link
+                
+    else:
+        raise ValueError("new_links_data must be a dictionary or list.")
+    
+    with open(filename, 'w') as file:
+        json.dump(existing_data, file, indent=4)
+
+def link_scraping_menu():
+    while True:
+        mode = custom_input("Enter '1' to scrape a URL, '2' from a text file, or 'x' to stop: ")
+        
+        if mode.lower() == 'x':
+            print("Exiting the link scraping.")
+            break
+        
+        if mode == '1':
+            url = custom_input("Enter the URL to scrape (type 'x' to stop): ")
+            
+            if url.lower() == 'x':
+                print("Exiting the link scraping.")
+                break
+            
+            new_links_data = get_links_from_page(url)
+            
+            if new_links_data:
+                save_links_to_json(new_links_data, 'links.json')
+                print(f"Links from '{url}' added to 'links.json'")
+            else:
+                print("No links found or error occurred.")
+                
+        elif mode == '2':
+            file_path = custom_input("Enter the path to the text file containing URLs: ")
+            
+            try:
+                with open(file_path, 'r') as file:
+                    urls = file.readlines()
+                
+                all_links_data = []
+                
+                total_urls = len(urls)
+                with tqdm(total=total_urls, desc="Scraping URLs", unit="url") as pbar:
+                    for url in urls:
+                        url = url.strip()
+                        if url:
+                            new_links_data = get_links_from_page(url)
+                            
+                            if new_links_data:
+                                all_links_data.extend(new_links_data)
+                        
+                        pbar.update(1)
+
+                if all_links_data:
+                    save_links_to_json(all_links_data, 'links.json')
+                    print("All links from the file have been added to 'links.json'.")
+                else:
+                    print("No links were found in the URLs provided.")
+            
+            except FileNotFoundError:
+                print(f"The file '{file_path}' was not found.")
+            except Exception as e:
+                print(f"An error occurred: {e}")
+        
+        else:
+            print("Invalid option. Please enter '1' or '2', or 'x'.")
+
 def main_menu():
     while True:
         clear_console()
@@ -349,6 +596,8 @@ def main_menu():
         print(Fore.RED + "2) Check Empty Pages")
         print(Fore.RED + "3) Compare Two Files for Missing Tags")
         print(Fore.RED + "4) Extract JSON to raw text for your files")
+        print(Fore.RED + "5) Scrape Links from a Webpage")
+        print(Fore.RED + "6) File path watchdog")
         print(Fore.RED + "X) Exit")
         
         choice = custom_input("Enter your choice: ")
@@ -372,10 +621,6 @@ def main_menu():
             check_urls(file_path)
             custom_input("Press Enter to return to the main menu...")
         
-        elif choice.lower() == 'x':
-            print(Fore.RED + "Exiting...")
-            break
-        
         elif choice == '3':
             old_file = custom_input("Enter the path to the first file (Old version): ")
             new_file = custom_input("Enter the path to the second file (New version): ")
@@ -397,8 +642,22 @@ def main_menu():
                 
             custom_input("Press Enter to return to the main menu...")
 
+        elif choice == '5':
+            link_scraping_menu()
+            custom_input("Press Enter to return to the main menu...")
+
+        elif choice == '6':
+            url = custom_input("Enther path to watchdog: ")
+            start_monitoring(url)
+            custom_input("Press Enter to return to the main menu...")
+
+
+        elif choice.lower() == 'x':
+            print(Fore.RED + "Exiting...")
+            break
+
         else:
-            print(Fore.RED + "Invalid choice. Please select 1, 2, 3, 4, or X.")
+            print(Fore.RED + "Invalid choice. Please select a valid option.")
             time.sleep(1)
 
 if __name__ == "__main__":
