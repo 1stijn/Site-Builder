@@ -6,6 +6,8 @@ import json
 import xml.etree.ElementTree as ET
 import os
 import colorama
+import random
+import string
 from tqdm import tqdm
 from urllib.parse import urlparse, urljoin
 from watchdog.observers import Observer
@@ -17,11 +19,11 @@ def set_terminal_size():
     title = "▬▬ι═══════ﺤ / Stijn's Lib \\ ▄︻デ══━一"
 
     if platform.system() == 'Darwin':
-        os.system('printf "\\e[8;55;87t"')
+        os.system('printf "\\e[8;59;87t"')
         os.system(f'echo -n -e "\\033]0;{title}\\007"')
 
     elif platform.system() == 'Windows':
-        os.system('mode con: cols=87 lines=55')
+        os.system('mode con: cols=87 lines=59')
         os.system(f'title {title}')
 
 set_terminal_size()
@@ -587,6 +589,141 @@ def link_scraping_menu():
         else:
             print("Invalid option. Please enter '1' or '2', or 'x'.")
 
+def fetch_html(url):
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        return response.text
+    except requests.RequestException as e:
+        print(f"Error fetching URL {url}: {e}")
+        return None
+
+def extract_metadata(html_content):
+    if html_content is None:
+        return {"error": "Failed to fetch HTML content"}
+    
+    soup = BeautifulSoup(html_content, 'html.parser')  
+    metadata = {
+        'title': soup.title.string if soup.title else 'No title',
+        'description': soup.find('meta', {'name': 'description'})['content'] if soup.find('meta', {'name': 'description'}) else 'No description',
+        'keywords': soup.find('meta', {'name': 'keywords'})['content'] if soup.find('meta', {'name': 'keywords'}) else 'No keywords'
+    }
+    return metadata
+
+def load_urls_from_file(file_path):
+    urls = []
+    try:
+        with open(file_path, 'r') as file:
+            urls = [line.strip() for line in file if line.strip()]
+    except FileNotFoundError:
+        print(f"Error: File not found - {file_path}")
+    return urls
+
+def save_metadata_to_file(filename, data):
+    with open(filename, 'w') as file:
+        json.dump(data, file, indent=4)
+    print(f"Metadata saved to {filename}")
+
+def extractmeta():
+    file_path = custom_input("Enter the file path containing URLs: ")
+    url_list = load_urls_from_file(file_path)
+    
+    if not url_list:
+        print("No URLs to process.")
+        return
+    
+    directory = 'meta_exports'
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+    
+    filename = f"{directory}/metadata_{int(time.time())}_results.json"
+
+    existing_data = {}
+
+    for url in tqdm(url_list, desc="Processing URLs", unit="URL"):
+        html_content = fetch_html(url)
+        metadata = extract_metadata(html_content)
+        
+        if "error" in metadata:
+            print(f"Skipping URL {url} due to error: {metadata['error']}")
+        else:
+            existing_data[url] = metadata
+    
+    save_metadata_to_file(filename, existing_data)
+
+def check_robots_compliance(url):
+    robots_url = url.rstrip('/') + '/robots.txt'
+    try:
+        response = requests.get(robots_url)
+        response.raise_for_status()
+        robots_txt = response.text
+        return robots_txt
+    except requests.RequestException as e:
+        return f"Error: {e}"
+
+def save_robots_to_file(url, robots_txt):
+    directory = 'robotTXT'
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+    
+    domain = urlparse(url).netloc.replace('.', '_')
+    filename = f"{directory}/{domain}-robot.txt"
+    
+    with open(filename, 'w') as file:
+        file.write(robots_txt)
+    print(f"Robots.txt saved to {filename}")
+
+def roboturl():
+    website_url = custom_input("Enter the URL to analyze: ")
+    robots_txt = check_robots_compliance(website_url)
+    save_robots_to_file(website_url, robots_txt)
+
+def validate_urls(urls):
+    results = {}
+    for url in tqdm(urls, desc="Validating URLs", unit="URL"):
+        try:
+            response = requests.get(url)
+            results[url] = response.status_code
+        except requests.RequestException as e:
+            results[url] = f"Error: {e}"
+    return results
+
+def load_urls_from_file(file_path):
+    urls = []
+    try:
+        with open(file_path, 'r') as file:
+            urls = [line.strip() for line in file if line.strip()]
+    except FileNotFoundError:
+        print(f"Error: File not found - {file_path}")
+    return urls
+
+def generate_random_code(length=4):
+    letters_and_digits = string.ascii_letters + string.digits
+    return ''.join(random.choice(letters_and_digits) for _ in range(length))
+
+def save_results_to_file(data):
+    directory = 'urlsValidate'
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+    
+    random_code = generate_random_code()
+    filename = f"{directory}/results{random_code}.json"
+    
+    with open(filename, 'w') as file:
+        json.dump(data, file, indent=4)
+    print(f"Results saved to {filename}")
+
+def validateUrls0():
+    file_path = custom_input("Enter the file path containing URLs: ")
+    urls_to_check = load_urls_from_file(file_path)
+    
+    if not urls_to_check:
+        print("No URLs to process.")
+        return
+    
+    results = validate_urls(urls_to_check)
+    save_results_to_file(results)
+
 def main_menu():
     while True:
         clear_console()
@@ -598,6 +735,9 @@ def main_menu():
         print(Fore.RED + "4) Extract JSON to raw text for your files")
         print(Fore.RED + "5) Scrape Links from a Webpage")
         print(Fore.RED + "6) File path watchdog")
+        print(Fore.RED + "7) Extract Meta Data")
+        print(Fore.RED + "8) Extract robot.txt")
+        print(Fore.RED + "9) Validate Pages")
         print(Fore.RED + "X) Exit")
         
         choice = custom_input("Enter your choice: ")
@@ -650,6 +790,18 @@ def main_menu():
             url = custom_input("Enther path to watchdog: ")
             start_monitoring(url)
             custom_input("Press Enter to return to the main menu...")
+
+        elif choice == '7':
+            extractmeta()
+            custom_input("Press enter to return to the main menu...")
+
+        elif choice == "8":
+            roboturl()
+            custom_input("Press enter to return to the main menu...")
+
+        elif choice == "9":
+            validateUrls0()
+            custom_input("Press enter to return to the main menu...")
 
 
         elif choice.lower() == 'x':
