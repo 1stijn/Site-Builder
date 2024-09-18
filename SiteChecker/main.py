@@ -53,7 +53,7 @@ def get_base_url(url):
     parsed_url = urlparse(url)
     return f"{parsed_url.scheme}://{parsed_url.netloc}"
 
-def try_sitemap_url(url): #243 sitemaps, more will follow =)
+def try_sitemap_url(url): 
     sitemap_paths = [ 
         '/sitemap.xml', '/sitemap_index.xml', '/sitemap1.xml', '/sitemap2.xml',
         '/sitemap_main.xml', '/sitemap-news.xml', '/sitemap-products.xml', 
@@ -305,7 +305,7 @@ def check_urls(file_path):
 
         first_url = urls[0].strip()
         domain_name = extract_domain(first_url)
-        output_filename = f'{domain_name}_results.json'
+        output_filename = f'Validation_{domain_name}_results.json'
 
         total_urls = len(urls)
         print(f"Processing {total_urls} URLs...")
@@ -724,6 +724,60 @@ def validateUrls0():
     results = validate_urls(urls_to_check)
     save_results_to_file(results)
 
+def scrape_javascript_libraries(url):
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        
+        soup = BeautifulSoup(response.text, 'html.parser')
+        
+        script_tags = soup.find_all('script')
+
+        js_libraries = []
+        for script in script_tags:
+            if script.get('src'):
+                js_url = urljoin(url, script['src'])
+                js_libraries.append(js_url)
+        
+        return js_libraries
+    
+    except requests.exceptions.RequestException as e:
+        print(f"Error accessing {url}: {e}")
+        return []
+
+def process_urls_from_file(file_path):
+    folder_name = 'JSLibsFound'
+    if not os.path.exists(folder_name):
+        os.makedirs(folder_name)
+
+    random_code = generate_random_code()
+    file_name = f'result{random_code}.json'
+    file_path_output = os.path.join(folder_name, file_name)
+    
+    results = {}
+    
+    try:
+        with open(file_path, 'r') as f:
+            urls = f.readlines()
+            urls = [url.strip() for url in urls if url.strip()]
+            
+            with tqdm(total=len(urls), desc="Processing URLs") as pbar:
+                for url in urls:
+                    js_libraries = scrape_javascript_libraries(url)
+                    if js_libraries:
+                        results[url] = js_libraries
+                    else:
+                        results[url] = "No JavaScript Libraries Found"
+                    
+                    pbar.update(1)
+        
+        with open(file_path_output, 'w') as json_file:
+            json.dump(results, json_file, indent=4)
+        print(f"Results saved to {file_path_output}")
+    
+    except FileNotFoundError:
+        print(f"File {file_path} not found.")
+
 def main_menu():
     while True:
         clear_console()
@@ -738,6 +792,7 @@ def main_menu():
         print(Fore.RED + "7) Extract Meta Data")
         print(Fore.RED + "8) Extract robot.txt")
         print(Fore.RED + "9) Validate Pages")
+        print(Fore.RED + "10) Scrape JS Lib's")
         print(Fore.RED + "X) Exit")
         
         choice = custom_input("Enter your choice: ")
@@ -748,7 +803,7 @@ def main_menu():
 
             if sitemap_urls:
                 domain_name = extract_domain(sitemap_url)
-                sitemap_filename = f'{domain_name}_results.json'
+                sitemap_filename = f'sitemap_{domain_name}_results.json'
                 with open(sitemap_filename, 'w') as json_file:
                     json.dump({"sitemap": sitemap_urls}, json_file, indent=4)
                 print(f"Sitemap URLs have been written to {sitemap_filename}.")
@@ -803,6 +858,10 @@ def main_menu():
             validateUrls0()
             custom_input("Press enter to return to the main menu...")
 
+        elif choice == "10":
+            url = custom_input("Enter the file path to the file with urls: ")
+            process_urls_from_file(url)
+            custom_input("Press enter to return to the main menu...")
 
         elif choice.lower() == 'x':
             print(Fore.RED + "Exiting...")
